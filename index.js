@@ -51,6 +51,16 @@ async function run() {
       const result = await userCollection.find().toArray();
       res.send(result);
     })
+    app.patch('/users/admin/:id', async (req, res) => {
+      const filter = {_id: new ObjectId(req.query.id)};
+      const updatedUser = {
+        $set:{
+          role: 'admin',
+        }
+      }
+      const result = await userCollection.updateOne(filter, updatedUser);
+      res.send(result)
+    })
     app.post('/users', async (req, res) => {
       const user = req.body;
       const existingUser = await userCollection.findOne({email: user.email});
