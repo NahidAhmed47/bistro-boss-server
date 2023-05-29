@@ -47,6 +47,10 @@ async function run() {
       res.send(result)
       }
     })
+    app.get('/users', async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    })
     app.post('/users', async (req, res) => {
       const user = req.body;
       const existingUser = await userCollection.findOne({email: user.email});
