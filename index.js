@@ -49,8 +49,14 @@ async function run() {
     })
     app.post('/users', async (req, res) => {
       const user = req.body;
-      const result = await userCollection.insertOne(user);
-      res.send(result)
+      const existingUser = await userCollection.findOne({email: user.email});
+      if(!existingUser){
+        const result = await userCollection.insertOne(user);
+        res.send(result)
+      }
+      else{
+        res.send({message: 'user already added'})
+      }
     })
     app.delete('/carts/:id', async (req, res) => {
       const query = {_id: new ObjectId(req.params.id)};
