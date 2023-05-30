@@ -10,6 +10,7 @@ app.use(express.json());
 
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
+  console.log(authorization)
   if (!authorization) {
     return res.status(401).send({ error: true, message: 'unauthorized access' });
   }
@@ -54,18 +55,24 @@ async function run() {
     // carts collection get
     app.get('/carts', verifyJWT, async (req, res) => {
       const email = req.query.email;
-      console.log(req.decoded)
       if (!email) {
         return res.send([]);
       }
-      if(email !== req.decoded.email){
+      if(email !== req.decoded?.email){
         return res.status(403).send({error: true, message: 'forbidden access'})
       }
       const result = await cartCollection.find({ email: email }).toArray();
       res.send(result)
-      // else{
-      //   res.status(403).send({error: true, message:'forbidden access'});
-      // }
+    })
+    // user role check
+    app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if(req.decoded?.email !== email){
+        return res.send({admin: false})
+      }
+      const user = await userCollection.findOne({ email: email });
+      const result = {admin: user?.role === 'admin'};
+      res.send(result);
     })
     app.get('/users', async (req, res) => {
       const result = await userCollection.find().toArray();
@@ -75,7 +82,7 @@ async function run() {
       // const email = req.body.email;
       // console.log(email)
       const email = req.body.email;
-      const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '2h' });
+      const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
       res.send({ token });
     })
     app.patch('/users/admin/:id', async (req, res) => {
