@@ -38,7 +38,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const menuCollection = client.db('bistro-boss-db').collection('menu');
     const reviewsCollection = client.db('bistro-boss-db').collection('reviews');
     const cartCollection = client.db('bistro-boss-db').collection('carts');
@@ -53,27 +53,30 @@ async function run() {
     })
     // carts collection get
     app.get('/carts', verifyJWT, async (req, res) => {
-      if (!req.query.email) {
-        res.send([]);
+      const email = req.query.email;
+      console.log(req.decoded)
+      if (!email) {
+        return res.send([]);
       }
-      else {
-        if (req.decoded.email === req.query.email) {
-          const result = await cartCollection.find({ email: req.query.email }).toArray();
-          res.send(result)
-        }
-        else{
-          res.status(403).send({error: true, message:'forbidden access'});
-        }
+      if(email !== req.decoded.email){
+        return res.status(403).send({error: true, message: 'forbidden access'})
       }
+      const result = await cartCollection.find({ email: email }).toArray();
+      res.send(result)
+      // else{
+      //   res.status(403).send({error: true, message:'forbidden access'});
+      // }
     })
     app.get('/users', async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     })
     app.post('/jwt', (req, res) => {
-      const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
-      res.send(token);
+      // const email = req.body.email;
+      // console.log(email)
+      const email = req.body.email;
+      const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '2h' });
+      res.send({ token });
     })
     app.patch('/users/admin/:id', async (req, res) => {
       const filter = { _id: new ObjectId(req.params.id) };
